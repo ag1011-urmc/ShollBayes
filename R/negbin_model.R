@@ -1,6 +1,7 @@
 model{
     for(i in 1:N){
-        y[i] ~ dnegbin(lambda[i], phi)
+        # which one is r which one is p? probably phi. but log gamma prior?
+        y[i] ~ dnegbin(phi, lambda[i]) # (p, r) rather than (r, p)
         eta[i] = ifelse(x[i] <= g[Cell_ID[i]], a1[Cell_ID[i]] * (g[Cell_ID[i]] - x[i])^k1 + t[Cell_ID[i]], a2[Cell_ID[i]] * (x[i] - g[Cell_ID[i]])^k2 + t[Cell_ID[i]])
         log(lambda[i]) <- eta[i]
     }
@@ -28,6 +29,10 @@ model{
         k1.animal[k] ~ dnorm(k1.pop, k1.tau.animal) T(1,)
         k2.animal[k] ~ dnorm(k2.pop, k2.tau.animal) T(1,)
     }
+
+    # log-gamma prior for \phi
+    log_phi ~ dgamma(1, 100)
+    phi <- exp(log_phi) # range is not correct
 
     #cell level
     a1.tau.cell <- pow(a1.sd.cell, -2)
@@ -79,5 +84,6 @@ model{
     a2.pop ~ dnorm(0, 100000) T(, 0)
     g.pop ~ dnorm(0, 0.01) T(0, 98)
     t.pop ~ dnorm(0, 0.25) T(0,)
-    # log-gamma prior for \phi
+    k1.pop ~ dnorm(1, 1000) T(1,)
+    k2.pop ~ dnorm(1, 1000) T(1,)
 }
